@@ -15,6 +15,18 @@ namespace HelloWorld
             var i = 123;
             var a, b = 0, c = i + 12;
 
+            while (i > 100 - 11)
+            {
+                b = b + 2;
+
+                if (b > 30)
+                {
+                    return c - 1;    
+                }
+
+                i = i - b;
+            }
+
             if (c % 2 == 1)
             { 
                 if (c % 3 == 0)

@@ -55,6 +55,8 @@ public class CodeParser
                     ParseReturnStatementSyntax(returnStatementSyntax),
                 IfStatementSyntax ifStatementSyntax =>
                     ParseIfStatementSyntax(ifStatementSyntax),
+                WhileStatementSyntax whileStatementSyntax =>
+                    ParseWhileStatementSyntax(whileStatementSyntax),
                 _ => throw new InvalidOperationException($"I can't parse {syntax}.")
             };
 
@@ -68,6 +70,18 @@ public class CodeParser
         }
 
         return rootNode!;
+    }
+    
+    private INode ParseWhileStatementSyntax(WhileStatementSyntax syntax)
+    {
+        var condition = MatchExpressionSyntax(syntax.Condition);
+        var whileBlock = syntax.Statement as BlockSyntax;
+
+        return new WhileNode(
+            condition!,
+            whileBlock is null
+                ? null
+                : ParseBlockSyntax(whileBlock));
     }
     
     private INode ParseIfStatementSyntax(IfStatementSyntax syntax)
