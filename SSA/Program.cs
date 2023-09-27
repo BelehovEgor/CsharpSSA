@@ -15,6 +15,17 @@ namespace HelloWorld
             var i = 123;
             var a, b = 0, c = i + 12;
 
+            for (var k = 0; k < 21 + b; k = k + 1)
+            {
+                var rr = 1;
+                rr = rr + 1;
+
+                if(rr > 0)
+                {
+                    throw new Exception();
+                } 
+            }
+
             while (i > 100 - 11)
             {
                 b = b + 2;
@@ -44,52 +55,7 @@ namespace HelloWorld
         }
     }
 }
-
-namespace HelloWorld1
-{
-    class Program1
-    {
-        static void Main(string[] args)
-        {
-            var i = 123;
-            var a, b = 0, c = i + 12;
-
-            a = 10;
-            a = 10 + 10;
-
-            if (a > 25)
-            { 
-                b = b * 2;
-
-                return a + b;         
-            }
-            else
-            {            
-                a = 10 + 10 + 10 + 10;
-
-                с = a * 2;
-            }
-
-            if (c % 2 == 1)
-            { 
-                return c - 1;         
-            }
-            
-            return c; 
-
-            var i = 123;
-            var a, b = 0, c = i + 12;
-
-            a = 10;
-            a = 10 + 10;
-            a = 10 + 10 + 10;
-            a = 10 + 10 + 10 + 10;
-            i = i * 2 + b;
-
-            Console.WriteLine(""Hello, World!"");
-        }
-    }
-}";
+";
 
 var parser = new CodeParser();
 var rootNode = parser.ParseMethod(
@@ -100,5 +66,3 @@ var rootNode = parser.ParseMethod(
 
 var painter = new Painter();
 await painter.Create(rootNode);
-
-var x = 0;

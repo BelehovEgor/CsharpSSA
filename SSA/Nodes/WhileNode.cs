@@ -8,10 +8,15 @@ using PossibleValue = OneOf<BinaryExpressionVariable, Variable, string?>;
 
 public class WhileNode : NodeBase
 {
-    public PossibleValue Condition { get; init; }
+    public ICollection<PossibleValue>  Condition { get; init; }
     public INode? True { get; init; }
 
     public WhileNode(PossibleValue condition, INode? trueNode)
+        : this(new[] {condition}, trueNode)
+    {
+    }
+
+    public WhileNode(ICollection<PossibleValue> condition, INode? trueNode)
     {
         Condition = condition;
         True = trueNode;
@@ -30,7 +35,7 @@ public class WhileNode : NodeBase
 
     public override string ToString()
     {
-        return Condition.Value.ToString() ?? string.Empty;
+        return string.Join(Environment.NewLine, Condition.Select(x => x.Value.ToString()));
     }
 
     private void MakeLoop(INode? node)

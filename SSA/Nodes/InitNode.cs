@@ -4,7 +4,7 @@ namespace SSA.Nodes;
 
 public sealed class InitNode : NodeBase
 {
-    public required ICollection<Variable> Variables { get; init; }
+    public required ICollection<PossibleValue> Variables { get; init; }
 
     public override void AddNext(params INode[] nodes)
     {
@@ -18,6 +18,6 @@ public sealed class InitNode : NodeBase
 
     public override string ToString()
     {
-        return string.Join(Environment.NewLine, Variables.Select(x => x.ToString()));
+        return string.Join(Environment.NewLine, Variables.Select(x => x.Value.ToString()));
     }
 }
