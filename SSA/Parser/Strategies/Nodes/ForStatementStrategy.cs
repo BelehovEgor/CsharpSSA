@@ -45,14 +45,12 @@ public static class ForStatementStrategy
                 lastNode.AddNext(incrementorNode);
             }
         }
-
-        if (condition is not null)
-        {
-            initValues.Add(PossibleValueStrategy.Handle(condition)!);
-        }
         
-        return new WhileNode(
+        return new ForNode(
             initValues,
+            (condition is not null 
+                ? PossibleValueStrategy.Handle(condition)
+                : true.ToString())!,
             blockNode);
     }
 }
