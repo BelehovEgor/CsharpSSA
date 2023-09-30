@@ -31,8 +31,8 @@ public sealed class InitSsaNode : SsaNode
             .Select(x => x.Value.ToString())
             .Where(x => x is not null);
         
-        values.AddRange(variablesString!);
         values.AddRange(phiString);
+        values.AddRange(variablesString!);
         
         return string.Join(Environment.NewLine, values);
     }
