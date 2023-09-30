@@ -1,5 +1,6 @@
-﻿using SSA.DotGraph;
-using SSA.Parser;
+﻿using SSA.CfgParser;
+using SSA.SsaParser;
+using SSA.Visualisation;
 
 const string programText = @"
 using System;
@@ -22,7 +23,14 @@ namespace HelloWorld
 
                 if(rr > 0)
                 {
-                    throw new Exception();
+                    if (rr < 10) 
+                    {
+                        b = b + 3;
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
                 } 
             }
 
@@ -58,11 +66,17 @@ namespace HelloWorld
 ";
 
 var parser = new CodeParser();
-var rootNode = parser.ParseMethod(
+var cfgRootNode = parser.ParseMethod(
     programText,
     "HelloWorld",
     "Program",
     "Main");
 
-var painter = new Painter();
-await painter.Create(rootNode);
+var ssaFromCfgCreator = new SsaFromCfgConverter();
+var ssaGraph = ssaFromCfgCreator.CreateGraph(cfgRootNode);
+
+var cfgPainter = new CfgPainter();
+await cfgPainter.Create(cfgRootNode);
+
+var ssaPainter = new SsaPainter();
+await ssaPainter.Create(ssaGraph);
