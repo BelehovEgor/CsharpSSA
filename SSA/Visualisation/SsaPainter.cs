@@ -63,19 +63,51 @@ public class SsaPainter
 
     private DotNode CreateNode(SsaNode node)
     {
+        var shape = node switch
+        {
+            ForSsaNode => DotNodeShape.Octagon,
+            WhileSsaNode => DotNodeShape.Hexagon,
+            IfSsaNode => DotNodeShape.Diamond,
+            ReturnSsaNode => DotNodeShape.Ellipse,
+            ExceptionSsaNode => DotNodeShape.Ellipse,
+            _ => DotNodeShape.Box
+        };
+        
         return new DotNode()
             .WithIdentifier(node.Id.ToString())
-            .WithShape(DotNodeShape.Box)
+            .WithShape(shape)
             .WithLabel(node.ToString());
     }
 
     private DotEdge[] CreateEdges(SsaNode node)
     {
-        return node.Members
-            .Select(m => 
-                new DotEdge()
-                    .From(node.Id.ToString())
-                    .To(m.Id.ToString()))
-            .ToArray();
+        return node switch
+        {
+            IfSsaNode => CreateEdgesForConditionNodes(node),
+            WhileSsaNode => CreateEdgesForConditionNodes(node),
+            _ => node.Members
+                .Select(m =>
+                    new DotEdge()
+                        .From(node.Id.ToString())
+                        .To(m.Id.ToString()))
+                .ToArray()
+        };
+    }
+
+    private DotEdge[] CreateEdgesForConditionNodes(SsaNode node)
+    {
+        var firstEdge =
+            new DotEdge()
+                .From(node.Id.ToString())
+                .To(node.Members.First().Id.ToString())
+                .WithColor(DotColor.Green);
+
+        var secondEdge =
+            new DotEdge()
+                .From(node.Id.ToString())
+                .To(node.Members.Last().Id.ToString())
+                .WithColor(DotColor.Red);
+
+        return new[] { firstEdge, secondEdge };
     }
 }

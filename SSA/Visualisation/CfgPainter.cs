@@ -63,19 +63,51 @@ public class CfgPainter
 
     private DotNode CreateNode(Node node)
     {
+        var shape = node switch
+        {
+            ForNode => DotNodeShape.Octagon,
+            WhileNode => DotNodeShape.Hexagon,
+            IfNode => DotNodeShape.Hexagon,
+            ReturnNode => DotNodeShape.Ellipse,
+            ExceptionNode => DotNodeShape.Ellipse,
+            _ => DotNodeShape.Box
+        };
+        
         return new DotNode()
             .WithIdentifier(node.Id.ToString())
-            .WithShape(DotNodeShape.Box)
+            .WithShape(shape)
             .WithLabel(node.ToString());
     }
 
     private DotEdge[] CreateEdges(Node node)
     {
-        return node.Members
-            .Select(m => 
-                new DotEdge()
-                    .From(node.Id.ToString())
-                    .To(m.Id.ToString()))
-            .ToArray();
+        return node switch
+        {
+            IfNode => CreateEdgesForConditionNodes(node),
+            WhileNode => CreateEdgesForConditionNodes(node),
+            _ => node.Members
+                .Select(m =>
+                    new DotEdge()
+                        .From(node.Id.ToString())
+                        .To(m.Id.ToString()))
+                .ToArray()
+        };
+    }
+
+    private DotEdge[] CreateEdgesForConditionNodes(Node node)
+    {
+        var firstEdge =
+            new DotEdge()
+                .From(node.Id.ToString())
+                .To(node.Members.First().Id.ToString())
+                .WithColor(DotColor.Green);
+
+        var secondEdge =
+            new DotEdge()
+                .From(node.Id.ToString())
+                .To(node.Members.Last().Id.ToString())
+                .WithColor(DotColor.Red);
+
+        return new[] { firstEdge, secondEdge };
     }
 }
