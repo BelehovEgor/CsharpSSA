@@ -8,8 +8,6 @@ namespace SSA.SsaParser;
 
 public class SsaFromCfgConverter
 {
-    private Dictionary<Guid, Dictionary<string, Variable>> _versionOnNodes = new();
-
     public SsaNode CreateGraph(Node node)
     {
         var ssaNodes = CreateNodes(node, new HashSet<Guid>()).ToDictionary(x => x.Id);
@@ -17,8 +15,9 @@ public class SsaFromCfgConverter
         AddMembers(ssaNodes, node, new HashSet<Guid>());
 
         var rootSsa = ssaNodes[node.Id];
-        
-        CreatePreliminaryVersions(rootSsa, new());
+
+        var globalVariablesVersions = new Dictionary<string, Variable>();
+        SetVersions(rootSsa, new(), globalVariablesVersions);
         foreach (var ssaNode in ssaNodes.Values)
         {
             ssaNode.AddPhiVariables(GetPhiFunctions(ssaNode));
@@ -80,96 +79,100 @@ public class SsaFromCfgConverter
         }
     }
 
+    // public void ChangeForToWhileWithInit(SsaNode node, HashSet<Guid> nodeIds)
+    // {
+    //     if (nodeIds.Contains(node.Id)) return;
+    //
+    //     nodeIds.Add(node.Id);
+    //
+    //     if (node is not ForSsaNode forSsaNode || !forSsaNode.Declarations.Any())
+    //     {
+    //         foreach (var member in node.Members.ToArray())
+    //         {
+    //             ChangeForToWhileWithInit(member, nodeIds);
+    //         }
+    //
+    //         return;
+    //     }
+    //
+    //     var initNode = new InitSsaNode(Guid.NewGuid(), forSsaNode.Declarations);
+    //     var whileNode = new WhileSsaNode(Guid.NewGuid(), forSsaNode.Condition);
+    //     
+    //     initNode.AddMember(whileNode);
+    //     
+    //     
+    // }
+    
     private ICollection<PhiVariable> GetPhiFunctions(SsaNode node)
     {
         if (node.Parents.Count < 2) return Array.Empty<PhiVariable>();
 
-        var nodeVariable = node.GetNodeVariables();
-        var currentNodeVersions = _versionOnNodes[node.Id]
-            .Where(pair => nodeVariable.Any(var => var.Name == pair.Value.Name))
-            .ToDictionary(x => x.Key, x => x.Value);
-        var versionDictionaries = _versionOnNodes
-            .Where(pair => node.Parents.Any(x => x.Id == pair.Key))
-            .ToArray();
-
-        var versionConflicts = new Dictionary<string, List<Variable>>();
-        foreach (var versionDictionary in versionDictionaries)
+        var versionDictionaries = node.Parents
+            .Select(x => x.VariablesNameVersions)
+            .ToList();
+        if (node is ForSsaNode forSsaNode) // дикие костыли
         {
-            var diff = Compare(currentNodeVersions, versionDictionary.Value);
-
-            foreach (var diffPair in diff)
-            {
-                if (versionConflicts.TryGetValue(diffPair.Key, out var list))
-                {
-                    list.AddRange(diffPair.Value);
-                }
-                else
-                {
-                    versionConflicts[diffPair.Key] = diffPair.Value;
-                }
-            }
+            var declarationVariables = forSsaNode.Declarations
+                .Where(x => x.IsT1)
+                .Select(x => x.AsT1)
+                .ToDictionary(x => x.Name, x => x);
+            versionDictionaries.Add(declarationVariables);
         }
+        
+        var commonDiff = Compare(versionDictionaries);
 
-        return versionConflicts
+        return commonDiff
             .Select(pair => new PhiVariable(pair.Key, pair.Value))
             .ToArray();
-    }
-    
-    private void CreatePreliminaryVersions(SsaNode node, Dictionary<string, Variable> variablesNameVersions)
-    {
-        if (_versionOnNodes.ContainsKey(node.Id)) return;
-
-        SetVersion(node.GetNodeVariables(), variablesNameVersions);
-        
-        _versionOnNodes.Add(node.Id, Clone(variablesNameVersions));
-                
-        foreach (var member in node.Members)
-        {
-            CreatePreliminaryVersions(member, variablesNameVersions);
-        }
     }
 
     private void SetVersions(
         SsaNode node, 
         HashSet<Guid> processedNodeIds, 
-        Dictionary<string, Variable> variablesNameVersions)
+        Dictionary<string, Variable> globalVariableVersions)
     {
         if (processedNodeIds.Contains(node.Id)) return;
 
         processedNodeIds.Add(node.Id);
-        
-        SetVersion(node.GetNodeVariables(), variablesNameVersions);
+
+        node.VariablesNameVersions =
+            Clone(node.Parents.FirstOrDefault()?.VariablesNameVersions ?? new Dictionary<string, Variable>());  
+        SetVersion(node, globalVariableVersions);
         
         foreach (var member in node.Members)
         {
-            SetVersions(member, processedNodeIds, variablesNameVersions);
+            SetVersions(member, processedNodeIds, globalVariableVersions);
         }
     }
 
-    private void SetVersion(ICollection<Variable> variables, Dictionary<string, Variable> variablesNameVersions)
+    private void SetVersion(
+        SsaNode node,
+        Dictionary<string, Variable> globalNameVersions)
     {
-        foreach (var variable in variables)
+        foreach (var variable in node.GetNodeVariables())
         {
             if (variable.HasValue())
             {
-                variable.Version = variablesNameVersions.TryGetValue(variable.Name, out var prevVariable)
+                variable.Version = globalNameVersions.TryGetValue(variable.Name, out var prevVariable)
                     ? prevVariable.Version + 1
                     : 0;
                 
-                variablesNameVersions[variable.Name] = variable;
+                globalNameVersions[variable.Name] = variable;
+                node.VariablesNameVersions[variable.Name] = variable;
             }
             else
             {
-                if (variablesNameVersions.TryGetValue(variable.Name, out var prevVariable))
+                if (node.VariablesNameVersions.TryGetValue(variable.Name, out var prevVariable))
                 {
                     variable.Version = prevVariable.Version;
                 }
                 else
                 {
                     variable.Version = 0;
-                    
-                    variablesNameVersions[variable.Name] = variable;
                 }
+
+                node.VariablesNameVersions[variable.Name] = variable;
+                globalNameVersions.TryAdd(variable.Name, variable);
             }
         }
     }
@@ -185,17 +188,29 @@ public class SsaFromCfgConverter
         return newDict;
     }
     
-    private Dictionary<string, List<Variable>> Compare(Dictionary<string, Variable> first, Dictionary<string, Variable> second)
+    private Dictionary<string, List<Variable>> Compare(ICollection<Dictionary<string, Variable>> versions)
     {
         var newDict = new Dictionary<string, List<Variable>>();
-        foreach (var (name, firstVariable) in first)
+        foreach (var version in versions)
         {
-            if (second.TryGetValue(name, out var secondVariable) && firstVariable.Version != secondVariable.Version)
+            foreach (var (name, variable) in version)
             {
-                newDict.Add(name, new() {firstVariable, secondVariable});
+                if (newDict.TryGetValue(name, out var set))
+                {
+                    if (set.All(x => x.Version != variable.Version))
+                    {
+                        set.Add(variable);
+                    }
+                }
+                else
+                {
+                    newDict[name] = new List<Variable> { variable };
+                }
             }
         }
-
-        return newDict;
+        
+        return newDict
+            .Where(x => x.Value.Count > 1)
+            .ToDictionary(x => x.Key, x => x.Value);
     }
 }

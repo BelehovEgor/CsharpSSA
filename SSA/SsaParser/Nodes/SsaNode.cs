@@ -13,6 +13,8 @@ public abstract class SsaNode
     public IReadOnlyCollection<SsaNode> Members => _membersList.AsReadOnly();
     public IReadOnlyCollection<SsaNode> Parents => _parentsList.AsReadOnly();
     public IReadOnlyCollection<PhiVariable> PhiVariables => _phiVariablesList.AsReadOnly();
+
+    public Dictionary<string, Variable> VariablesNameVersions { get; set; } = new();
     
     public SsaNode(Guid id)
     {
@@ -23,6 +25,12 @@ public abstract class SsaNode
     {
         _membersList.Add(node);
         node._parentsList.Add(this);
+    }
+    
+    public void RemoveMember(SsaNode node)
+    {
+        _membersList.Remove(node);
+        node._parentsList.Remove(this);
     }
     
     public void AddPhiVariables(ICollection<PhiVariable> phiVariables)

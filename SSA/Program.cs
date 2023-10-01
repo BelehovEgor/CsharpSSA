@@ -23,13 +23,15 @@ namespace HelloWorld
 
                 if(rr > 0)
                 {
+                    k = 1 + k;
                     if (rr < 10) 
                     {
-                        b = b + 3;
-                    }
-                    else
-                    {
                         throw new Exception();
+                    }
+                    else 
+                    {
+                        rr = k + rr * 2;
+                        k = rr + 1;
                     }
                 } 
             }
