@@ -22,6 +22,17 @@ public class WhileNode : Node
         AddMember(node);
 
         MakeLoop(True);
+
+        ProcessBreaks(node);
+    }
+
+    private void ProcessBreaks(Node node)
+    {
+        var breakNodes = this.GetBreakNodes();
+        foreach (var breakNode in breakNodes)
+        {
+            breakNode.AddNext(node);
+        }
     }
 
     public override ICollection<Variable> GetNodeVariables()

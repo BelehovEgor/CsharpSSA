@@ -48,6 +48,7 @@ public class SsaFromCfgConverter
             InitNode initNode => new InitSsaNode(id, initNode.Variables.Select(x => x.Clone()).ToArray()),
             ReturnNode returnNode => new ReturnSsaNode(id, returnNode.ReturnValue.Clone()),
             ExceptionNode exceptionNode => new ExceptionSsaNode(id, exceptionNode.Exception),
+            BreakNode breakNode => new BreakSsaNode(breakNode.Id),
             _ => throw new ArgumentOutOfRangeException(nameof(node))
         };
         

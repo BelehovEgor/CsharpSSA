@@ -23,6 +23,8 @@ public static class StatementStrategy
                 ForStatementStrategy.Handle(forStatementSyntax),
             ThrowStatementSyntax throwStatementSyntax =>
                 ExceptionStatementStrategy.Handle(throwStatementSyntax),
+            BreakStatementSyntax breakStatementSyntax =>
+                BreakStatementSyntaxStrategy.Handle(breakStatementSyntax),
             _ => throw new InvalidOperationException($"I can't parse {syntax}.")
         };
     } 

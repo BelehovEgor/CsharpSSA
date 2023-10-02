@@ -42,7 +42,7 @@ namespace HelloWorld
 
                 if (b > 30)
                 {
-                    return c - 1;    
+                    break; 
                 }
 
                 i = i - b;
@@ -74,11 +74,12 @@ var cfgRootNode = parser.ParseMethod(
     "Program",
     "Main");
 
-var ssaFromCfgCreator = new SsaFromCfgConverter();
-var ssaGraph = ssaFromCfgCreator.CreateGraph(cfgRootNode);
-
 var cfgPainter = new CfgPainter();
 await cfgPainter.Create(cfgRootNode);
+
+
+var ssaFromCfgCreator = new SsaFromCfgConverter();
+var ssaGraph = ssaFromCfgCreator.CreateGraph(cfgRootNode);
 
 var ssaPainter = new SsaPainter();
 await ssaPainter.Create(ssaGraph);

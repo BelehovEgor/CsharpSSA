@@ -4,13 +4,21 @@ public static class NodeExtensions
 {
     public static IEnumerable<Node> GetLastReturnsNodesFromBlock(this Node node)
     {
-        var usedNodes = new HashSet<Guid>();
-        var nodes = GetLastReturnsNodesFromBlockRec(node, usedNodes);
+        var nodes = GetLastReturnsNodesFromBlock(node, new());
 
         return nodes;
     }
     
-    private static IEnumerable<Node> GetLastReturnsNodesFromBlockRec(this Node node, HashSet<Guid> usedNodes)
+    public static IEnumerable<Node> GetBreakNodes(this WhileNode node)
+    {
+        if (node.True is null) return ArraySegment<Node>.Empty;
+        
+        var nodes = GetBreakNodes(node.True, new() {node.Id});
+
+        return nodes;
+    }
+    
+    private static IEnumerable<Node> GetLastReturnsNodesFromBlock(this Node node, HashSet<Guid> usedNodes)
     {
         switch (node)
         {
@@ -22,15 +30,35 @@ public static class NodeExtensions
                 break;
             case ReturnNode:
                 return Array.Empty<Node>();
-        };
+            case ExceptionNode:
+                return Array.Empty<Node>();
+            case BreakNode:
+                return Array.Empty<Node>();
+        }
         
         var nodes = new List<Node>();
         foreach (var member in node.Members)
         {
             if (usedNodes.Contains(member.Id)) continue;
-
             usedNodes.Add(member.Id);
-            nodes.AddRange(GetLastReturnsNodesFromBlockRec(member, usedNodes));
+            
+            nodes.AddRange(GetLastReturnsNodesFromBlock(member, usedNodes));
+        }
+
+        return nodes;
+    }
+    
+    private static IEnumerable<Node> GetBreakNodes(this Node node, HashSet<Guid> usedNodes)
+    {
+        if (node is BreakNode) return new[] {node};
+        
+        var nodes = new List<Node>();
+        foreach (var member in node.Members)
+        {
+            if (usedNodes.Contains(member.Id)) continue;
+            usedNodes.Add(member.Id);
+            
+            nodes.AddRange(GetBreakNodes(member, usedNodes));
         }
 
         return nodes;
