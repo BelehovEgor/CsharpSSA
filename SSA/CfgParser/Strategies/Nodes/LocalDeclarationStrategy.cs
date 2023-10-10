@@ -6,17 +6,21 @@ namespace SSA.CfgParser.Strategies.Nodes;
 
 public static class LocalDeclarationStrategy
 {
-    public static Node Handle(
+    public static Node? Handle(
         LocalDeclarationStatementSyntax syntax)
     {
         var variables = syntax.Declaration.Variables
             .Select(VariableStrategy.Handle)
+            .Where(x => x.HasValue())
             .Select(x => x.Map())
             .ToArray();
 
-        return new InitNode
-        {
-            Variables = variables
-        };
+        
+        return variables.Any()
+            ? new InitNode
+            {
+                Variables = variables
+            }
+            : null            ;
     }
 }

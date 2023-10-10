@@ -24,17 +24,33 @@ public class WhileNode : Node
         MakeLoop(True);
 
         ProcessBreaks(node);
+        ProcessContinues();
     }
 
-    private void ProcessBreaks(Node node)
+    protected void ProcessBreaks(Node node)
     {
         var breakNodes = this.GetBreakNodes();
         foreach (var breakNode in breakNodes)
         {
-            breakNode.AddNext(node);
+            foreach (var parent in breakNode.Parents.ToArray())
+            {
+                parent.SwapMember(breakNode, node);
+            }
         }
     }
 
+    protected void ProcessContinues()
+    {
+        var continueNodes = this.GetContinueNodes();
+        foreach (var continueNode in continueNodes)
+        {
+            foreach (var parent in continueNode.Parents.ToArray())
+            {
+                parent.SwapMember(continueNode, this);
+            }
+        }
+    }
+    
     public override ICollection<Variable> GetNodeVariables()
     {
         return Condition.GetAllVariables();
@@ -45,7 +61,7 @@ public class WhileNode : Node
         return Condition.Value.ToString() ?? true.ToString();
     }
 
-    private void MakeLoop(Node? node)
+    protected void MakeLoop(Node? node)
     {
         var trueLastNodes = node?.GetLastReturnsNodesFromBlock();
         if (trueLastNodes is not null)

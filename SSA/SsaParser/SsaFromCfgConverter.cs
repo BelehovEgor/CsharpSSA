@@ -41,7 +41,6 @@ public class SsaFromCfgConverter
         {
             ForNode forNode => new ForSsaNode(
                 id, 
-                forNode.Declarations.Select(x => x.Clone()).ToArray(), 
                 forNode.Condition.Clone()),
             WhileNode whileNode => new WhileSsaNode(id, whileNode.Condition.Clone()),
             IfNode ifNode => new IfSsaNode(id, ifNode.Condition.Clone()),
@@ -111,14 +110,6 @@ public class SsaFromCfgConverter
         var versionDictionaries = node.Parents
             .Select(x => x.VariablesNameVersions)
             .ToList();
-        if (node is ForSsaNode forSsaNode) // дикие костыли
-        {
-            var declarationVariables = forSsaNode.Declarations
-                .Where(x => x.IsT1)
-                .Select(x => x.AsT1)
-                .ToDictionary(x => x.Name, x => x);
-            versionDictionaries.Add(declarationVariables);
-        }
         
         var commonDiff = Compare(versionDictionaries);
 

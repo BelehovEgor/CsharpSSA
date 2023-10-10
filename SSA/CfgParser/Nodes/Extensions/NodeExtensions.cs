@@ -18,6 +18,31 @@ public static class NodeExtensions
         return nodes;
     }
     
+    public static IEnumerable<Node> GetContinueNodes(this WhileNode node)
+    {
+        if (node.True is null) return ArraySegment<Node>.Empty;
+        
+        var nodes = GetContinueNodes(node.True, new() {node.Id});
+
+        return nodes;
+    }
+    
+    public static IEnumerable<Node> GetContinueNodes(this Node node, HashSet<Guid> usedNodes)
+    {
+        if (node is ContinueNode) return new[] {node};
+        
+        var nodes = new List<Node>();
+        foreach (var member in node.Members)
+        {
+            if (usedNodes.Contains(member.Id)) continue;
+            usedNodes.Add(member.Id);
+            
+            nodes.AddRange(GetContinueNodes(member, usedNodes));
+        }
+
+        return nodes;
+    }
+    
     private static IEnumerable<Node> GetLastReturnsNodesFromBlock(this Node node, HashSet<Guid> usedNodes)
     {
         switch (node)

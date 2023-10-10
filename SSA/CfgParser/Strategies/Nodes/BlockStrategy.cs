@@ -14,9 +14,20 @@ public static class BlockStrategy
         {
             var node = StatementStrategy.Handle(syntax);
 
-            rootNode ??= node;
+            if (node is InitNode initNode && initNode.Members.FirstOrDefault() is ForNode forNode)
+            {
+                rootNode ??= initNode;
+                node = forNode;
+            }
+            else
+            {
+                rootNode ??= node;
+            }
 
-            currentNode?.AddNext(node);
+            if (node is not null)
+            {
+                currentNode?.AddNext(node);
+            }
             currentNode = node;
         }
 

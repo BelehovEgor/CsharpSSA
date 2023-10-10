@@ -40,17 +40,36 @@ public static class ForStatementStrategy
         if (incrementorNode is not null)
         {
             var lastNodes = blockNode.GetLastReturnsNodesFromBlock();
+            
             foreach (var lastNode in lastNodes)
             {
                 lastNode.AddNext(incrementorNode);
             }
+
+            var continueNodes = blockNode.GetContinueNodes(new());
+            foreach (var continueNode in continueNodes)
+            {
+                foreach (var parent in continueNode.Parents.ToArray())
+                {
+                    parent.DeleteMember(continueNode);
+                    parent.AddMember(incrementorNode);
+                }
+            }
         }
-        
-        return new ForNode(
-            initValues,
-            (condition is not null 
+
+        var initNode = new InitNode
+        {
+            Variables = initValues
+        };
+
+        var whileNode = new ForNode(
+            (condition is not null
                 ? PossibleValueStrategy.Handle(condition)
                 : true.ToString())!,
             blockNode);
+        
+        initNode.AddNext(whileNode);
+        
+        return initNode;
     }
 }

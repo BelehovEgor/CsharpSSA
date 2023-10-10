@@ -65,7 +65,7 @@ public class CfgPainter
     {
         var shape = node switch
         {
-            ForNode => DotNodeShape.Octagon,
+            ForNode => DotNodeShape.Hexagon,
             WhileNode => DotNodeShape.Hexagon,
             IfNode => DotNodeShape.Hexagon,
             ReturnNode => DotNodeShape.Ellipse,
@@ -83,8 +83,8 @@ public class CfgPainter
     {
         return node switch
         {
-            IfNode => CreateEdgesForConditionNodes(node),
-            WhileNode => CreateEdgesForConditionNodes(node),
+            IfNode ifNode => CreateEdgesForConditionNodes(ifNode),
+            WhileNode whileNode => CreateEdgesForConditionNodes(whileNode),
             _ => node.Members
                 .Select(m =>
                     new DotEdge()

@@ -65,9 +65,9 @@ public class SsaPainter
     {
         var shape = node switch
         {
-            ForSsaNode => DotNodeShape.Octagon,
+            ForSsaNode => DotNodeShape.Hexagon,
             WhileSsaNode => DotNodeShape.Hexagon,
-            IfSsaNode => DotNodeShape.Diamond,
+            IfSsaNode => DotNodeShape.Hexagon,
             ReturnSsaNode => DotNodeShape.Ellipse,
             ExceptionSsaNode => DotNodeShape.Ellipse,
             _ => DotNodeShape.Box

@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using SSA.CfgParser.Nodes;
 using SSA.CfgParser.Strategies.Nodes;
-using SSA.CfgParser.Strategies.Variables;
 using SSA.Syntax;
 
 namespace SSA.CfgParser;
@@ -18,20 +17,7 @@ public class CodeParser
             .GetNamespaceByName(namespaceName)
             .GetClassByName(className)
             .GetMethodByName(methodName);
-
-        var methodArguments = MethodArgumentStrategy.Handle(method.ParameterList.Parameters);
         
-        var methodArgumentsNode = new InitNode
-        {
-            Variables = methodArguments.Select(x => x.Map()).ToArray()
-        };
-        
-        if (method.Body is not null)
-        {
-            var bodyTree = BlockStrategy.Handle(method.Body!);
-            methodArgumentsNode.AddNext(bodyTree);
-        }
-        
-        return methodArgumentsNode;
+        return BlockStrategy.Handle(method.Body!);
     }
 }

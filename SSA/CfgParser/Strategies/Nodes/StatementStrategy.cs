@@ -5,7 +5,7 @@ namespace SSA.CfgParser.Strategies.Nodes;
 
 public static class StatementStrategy
 {
-    public static Node Handle(StatementSyntax syntax)
+    public static Node? Handle(StatementSyntax syntax)
     {
         return syntax switch
         {
@@ -25,6 +25,8 @@ public static class StatementStrategy
                 ExceptionStatementStrategy.Handle(throwStatementSyntax),
             BreakStatementSyntax breakStatementSyntax =>
                 BreakStatementSyntaxStrategy.Handle(breakStatementSyntax),
+            ContinueStatementSyntax continueStatementSyntax =>
+                ContinueStatementSyntaxStrategy.Handle(continueStatementSyntax),
             _ => throw new InvalidOperationException($"I can't parse {syntax}.")
         };
     } 
